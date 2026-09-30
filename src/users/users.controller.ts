@@ -11,6 +11,7 @@ import { Role } from 'src/roles/roles.enum';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Types } from 'mongoose';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth-guard';
 
 @ApiTags('Users')
 @Controller({
@@ -177,7 +178,7 @@ export class UsersController {
         return this.usersService.deleteUser(objectId);
     }
 
-    @UseGuards(AuthGuard,RolesGuard)
+    @UseGuards(JwtAuthGuard,RolesGuard)
     @Get('/profile/:id')
     @Roles(Role.Admin, Role.User)
     @ApiOperation({ summary: 'Fecth specific user' })

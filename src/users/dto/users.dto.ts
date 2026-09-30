@@ -36,11 +36,10 @@ export class UserDto {
     })
     mobileNo?: number;
 
-    @IsEnum(Role)
+    @IsString()
     @ApiProperty({
-        enum: Role,
-        example: Role.Admin,
-        description: 'Role'
+        type: 'string',
+        example: 'Admin'
     })
     role!: Role;
 
@@ -69,11 +68,10 @@ export class UpdateUserDto {
     })
     mobileNo?: number;
 
-    @IsEnum(Role)
+    @IsString()
     @ApiProperty({
-        enum: Role,
-        example: Role.Admin,
-        description: 'Role'
+         type: 'string',
+        example: 'Admin'
     })
     role?: Role;
 
