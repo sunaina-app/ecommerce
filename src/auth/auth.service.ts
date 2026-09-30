@@ -26,6 +26,7 @@ export class AuthService {
 
         const user =  await this.userService.fetchprofile(undefined,email.toLowerCase());
 
+
         const isMatch = await bcrypt.compare(password,user.password);
 
         if(!isMatch){

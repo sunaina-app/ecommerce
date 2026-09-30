@@ -8,13 +8,17 @@ import * as bcrypt from 'bcrypt';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from './dto/user-response.dto';
+import { Roles } from 'src/roles/schemas/roles.schema';
 
 
 @Injectable()
 export class UsersService {
 
 
-    constructor(@InjectModel(Users.name) private usersData: Model<Users>) { }
+    constructor(
+        @InjectModel(Users.name) private usersData: Model<Users>,
+        @InjectModel(Roles.name) private rolesData: Model<Roles>
+    ) { }
 
     async createUser(userDto: UserDto, imagepath: string): Promise<UserResponseDto> {
 
@@ -25,7 +29,7 @@ export class UsersService {
         });
 
         if (existingUser) {
-            throw new ConflictException('User with this email already exists');
+            throw new NotFoundException('User with this email already exists');
         }
 
         const salt = await bcrypt.genSalt();
@@ -33,17 +37,38 @@ export class UsersService {
 
         const hash = await bcrypt.hash(password, salt);
 
+        const matchRole = await this.rolesData.findOne({ name: userDto.role.toLowerCase() });
+
+        if (!matchRole) {
+            throw new NotFoundException('Role does not exist');
+        }
+
         const newUser = new this.usersData({
             ...userDto,
             email: userDto.email ? String(userDto.email.toLowerCase()) : '',
             mobileNo: userDto.mobileNo ? String(userDto.mobileNo) : '',
             password: hash,
-            profile_photo: imagepath
+            profile_photo: imagepath,
+            role: matchRole._id
         });
 
         const addUser = await newUser.save();
 
-        return plainToInstance(UserResponseDto, addUser.toObject());
+        const userWithRole = await this.usersData.findById(addUser._id).populate('role', 'name');
+
+        if (!userWithRole) {
+            throw new NotFoundException('User not found');
+        }
+
+        const userObject = userWithRole.toObject();
+
+        const response = {
+            ...userObject,
+            _id: userObject._id.toString(),
+            role: userObject.role?.name,
+        };
+
+        return plainToInstance(UserResponseDto, response);
     }
 
     async fetchprofile(objectId?: Types.ObjectId, email?: string): Promise<UserResponseDto | UsersData> {
@@ -56,7 +81,17 @@ export class UsersService {
                 throw new NotFoundException(`User with ID ${objectId} not found`);
             }
 
-            return plainToInstance(UserResponseDto, user);
+            const matchRole = await this.rolesData.findById(user.role);
+
+            if (!matchRole) {
+                throw new NotFoundException('Role does not exist');
+            }
+
+            return plainToInstance(UserResponseDto, {
+                ...user.toObject(),
+                _id: user._id.toString(),
+                role: matchRole?.name ?? "null"
+            });
 
         }
 
@@ -67,7 +102,17 @@ export class UsersService {
             if (!users) {
                 throw new NotFoundException(`User with ${email} not found`);
             }
-            return users;
+
+            const matchRole = await this.rolesData.findById(users.role);
+
+            if (!matchRole) {
+                throw new NotFoundException('Role does not exist');
+            }
+
+            return {
+                ...users.toObject(),
+                role: matchRole?.name ?? "null"
+            } as UsersData;
         }
         throw new BadRequestException(
             'Either user ID or email is required'

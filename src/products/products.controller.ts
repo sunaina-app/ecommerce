@@ -11,6 +11,8 @@ import { extname } from 'path';
 import { PaginationQueryDto } from 'src/common/dto/pagination-query.dto';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Types } from 'mongoose';
+import { PermissionGuard } from 'src/permission/permission.guard';
+import { RequirePermissions } from 'src/permission/permission.decorator';
 
 @ApiTags('Products')
 @Controller({
@@ -22,8 +24,8 @@ export class ProductsController {
     constructor(private readonly productService: ProductsService) { }
     
     @Post('/add')
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, PermissionGuard)
+    @RequirePermissions('product.create')
     @ApiOperation({summary:'Add product'})
     @ApiConsumes('multipart/form-data')
     @ApiBody({type:ProductDto})
@@ -91,8 +93,8 @@ export class ProductsController {
     }
 
     @Put('/update/:id')
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, PermissionGuard)
+    @RequirePermissions('product.update')
     @ApiOperation({summary:'Update product'})
     @ApiConsumes('multipart/form-data')
     @ApiBody({type:UpdateProductDto})
@@ -165,8 +167,8 @@ export class ProductsController {
     
     
     @Delete('/delete/:id')
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, PermissionGuard)
+    @RequirePermissions('product.deleteParticularProduct')
     @ApiOperation({summary:'Delete specific product'})
     @ApiBearerAuth('access-token')
 
@@ -179,8 +181,8 @@ export class ProductsController {
     }
     
     @Delete('/deleteAll')
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.Admin)
+    @UseGuards(AuthGuard, PermissionGuard)
+    @RequirePermissions('product.deleteAll')
     @ApiOperation({summary:'Delete all products'})
     @ApiBearerAuth('access-token')
 
@@ -189,8 +191,8 @@ export class ProductsController {
     }
     
     @Get('/all')
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.Admin, Role.User)
+    @UseGuards(AuthGuard, PermissionGuard)
+    @RequirePermissions('product.findAll')
     @ApiOperation({summary:'Fetch all products list'})
     @ApiBearerAuth('access-token')
     
@@ -199,8 +201,8 @@ export class ProductsController {
     }
     
     @Get('/details/:id')
-    @UseGuards(AuthGuard, RolesGuard)
-    @Roles(Role.Admin, Role.User)
+    @UseGuards(AuthGuard, PermissionGuard)
+    @RequirePermissions('product.findParticularProduct')
     @ApiOperation({summary:'Fetch specific product from the list'})
     @ApiBearerAuth('access-token')
     

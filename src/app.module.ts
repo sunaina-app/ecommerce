@@ -13,6 +13,8 @@ import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { PermissionModule } from './permission/permission.module';
+import { RolesModule } from './roles/roles.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { TransformInterceptor } from './common/interceptors/transform.intercepto
         uri: configService.get<string>('MONGO_URI')
       })
     }),
+    PermissionModule,
+    RolesModule,
   ],
 
   controllers: [AppController],
